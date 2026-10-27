@@ -1,6 +1,6 @@
 {
-  "titulo": "Bienvenido a la página de prueba 1234321",
-  "subtitulo": "Mamahuevo Mamahuevo AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
-  "imagen": "/img/banner.svg",
+  "titulo": "Bienvenido a la página de prueba",
+  "subtitulo": "Este texto se puede cambiar desde el panel",
+  "imagen": "img/banner.svg",
   "alt": "Banner de prueba con fondo café oscuro"
 }

@@ -57,10 +57,54 @@ function normalizarImagen(valor) {
   return { externa: false, ruta: v.replace(/^\/+/, '').replace(/ /g, '%20') };
 }
 
+function srcImagen(img, base) {
+  if (!img) return '';
+  return img.externa ? img.ruta : base + img.ruta;
+}
+
 function escribir(rel, contenido) {
   const destino = path.join(OUT, rel);
   fs.mkdirSync(path.dirname(destino), { recursive: true });
   fs.writeFileSync(destino, contenido);
+}
+
+// ---------- videos de YouTube ----------
+// Acepta enlaces watch, youtu.be, shorts, embed y live; devuelve el ID de 11 caracteres
+function idYoutube(valor) {
+  const v = String(valor ?? '').trim();
+  const m = v.match(
+    /^https?:\/\/(?:www\.|m\.)?(?:youtube\.com\/(?:watch\?(?:[^#]*&)?v=|shorts\/|embed\/|live\/)|youtu\.be\/)([A-Za-z0-9_-]{11})(?![A-Za-z0-9_-])/
+  );
+  return m ? m[1] : null;
+}
+
+function bloqueVideo(url, titulo) {
+  const v = String(url ?? '').trim();
+  if (!v) return '';
+  const id = idYoutube(v);
+  if (id) {
+    return `<div class="video"><iframe src="https://www.youtube-nocookie.com/embed/${id}" title="${esc(titulo)}" loading="lazy" allow="encrypted-media; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div>`;
+  }
+  console.warn(`Aviso: enlace de video no reconocido como YouTube: ${v}`);
+  // Si no es de YouTube pero es un enlace, lo mostramos como enlace normal
+  return /^https?:\/\//.test(v)
+    ? `<p><a href="${esc(v)}" target="_blank" rel="noopener">Ver video</a></p>`
+    : '';
+}
+
+// ---------- bloques de contenido (la "cascada") ----------
+// Cada bloque puede traer: subtítulo, imagen (con alt), video y descripción.
+// Todo es opcional; lo que esté vacío simplemente no se dibuja.
+function bloqueSeccion(s, base, tituloTaller) {
+  const partes = [];
+  if (s.subtitulo) partes.push(`<h2>${esc(s.subtitulo)}</h2>`);
+  if (s.imagen) {
+    partes.push(`<img src="${esc(srcImagen(s.imagen, base))}" alt="${esc(s.alt)}" loading="lazy">`);
+  }
+  if (s.video) partes.push(bloqueVideo(s.video, s.subtitulo || tituloTaller));
+  if (s.html) partes.push(`<div class="texto">\n${s.html}\n</div>`);
+  const dentro = partes.filter(Boolean).join('\n');
+  return dentro ? `<section class="bloque">\n${dentro}\n</section>` : '';
 }
 
 // ---------- plantilla común (menú, cabecera, pie) ----------
@@ -121,7 +165,19 @@ if (fs.existsSync(SRC_TALLERES)) {
       continue;
     }
 
-    const slug = slugify(path.basename(archivo, '.md'));
+    // La dirección sale del nombre del archivo, sin el prefijo de fecha que pone el panel
+    const slug = slugify(path.basename(archivo, '.md').replace(/^\d{4}-\d{2}-\d{2}-/, ''));
+
+    const secciones = (Array.isArray(datos.secciones) ? datos.secciones : [])
+      .filter((s) => s && typeof s === 'object')
+      .map((s) => ({
+        subtitulo: s.subtitulo ? String(s.subtitulo) : '',
+        imagen: normalizarImagen(s.imagen),
+        alt: s.alt ? String(s.alt) : '',
+        video: s.video ? String(s.video) : '',
+        html: s.descripcion ? marked.parse(String(s.descripcion)) : '',
+      }));
+
     talleres.push({
       slug,
       titulo: String(datos.titulo),
@@ -129,7 +185,8 @@ if (fs.existsSync(SRC_TALLERES)) {
       resumen: datos.resumen ? String(datos.resumen) : '',
       imagen: normalizarImagen(datos.imagen),
       alt: datos.alt ? String(datos.alt) : '',
-      html: marked.parse(cuerpo),
+      introduccion: cuerpo.trim() ? marked.parse(cuerpo) : '',
+      secciones,
     });
   }
 }
@@ -138,15 +195,16 @@ talleres.sort((a, b) => b.fecha.localeCompare(a.fecha)); // más recientes prime
 // ---------- 3. una página por taller ----------
 for (const t of talleres) {
   const base = '../../';
-  const src = t.imagen ? (t.imagen.externa ? t.imagen.ruta : base + t.imagen.ruta) : '';
+  const portada = srcImagen(t.imagen, base);
+  const bloques = t.secciones.map((s) => bloqueSeccion(s, base, t.titulo)).filter(Boolean);
+
   const cuerpo = `    <a class="volver" href="${base}talleres.html">&larr; Todos los talleres</a>
     <article class="taller-detalle">
       <h1>${esc(t.titulo)}</h1>
       ${t.fecha ? `<p class="fecha">${esc(fechaLarga(t.fecha))}</p>` : ''}
-      ${src ? `<img src="${esc(src)}" alt="${esc(t.alt)}">` : ''}
-      <div class="contenido">
-${t.html}
-      </div>
+      ${portada ? `<img src="${esc(portada)}" alt="${esc(t.alt)}">` : ''}
+      ${t.introduccion ? `<div class="texto">\n${t.introduccion}\n</div>` : ''}
+${bloques.join('\n')}
     </article>`;
 
   escribir(
