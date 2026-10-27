@@ -1,4 +1,8 @@
 ---
+titulo: Taller de prueba pesado
+fecha: 2026-11-25
+resumen: Prueba con muchos bloques.
+publicado: true
 secciones:
   - subtitulo: sdsdsdsdsdsdsdsd
     imagen: /img/banner.svg
