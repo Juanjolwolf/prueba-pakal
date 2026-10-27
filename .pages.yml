@@ -22,27 +22,29 @@ content:
 
   - name: talleres
     label: Talleres
-    type: file
-    path: datos/talleres.json
-    format: json
+    type: collection
+    path: contenido/talleres
     fields:
-      - name: talleres
-        label: Talleres
-        type: object
-        list: true
-        fields:
-          - name: titulo
-            label: Título
-            type: string
-          - name: fecha
-            label: Fecha
-            type: date
-          - name: descripcion
-            label: Descripción
-            type: text
-          - name: imagen
-            label: Imagen
-            type: image
-          - name: alt
-            label: Texto alternativo de la imagen
-            type: string
+      - name: titulo
+        label: Título
+        type: string
+        required: true
+      - name: fecha
+        label: Fecha
+        type: date
+      - name: resumen
+        label: Resumen corto (sale en el listado)
+        type: text
+      - name: imagen
+        label: Imagen de portada
+        type: image
+      - name: alt
+        label: Texto alternativo de la imagen
+        type: string
+      - name: publicado
+        label: Publicado
+        type: boolean
+        default: true
+      - name: body
+        label: Descripción completa
+        type: rich-text
