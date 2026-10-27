@@ -1,0 +1,6 @@
+{
+  "titulo": "Bienvenido a la página de prueba",
+  "subtitulo": "Este texto se puede cambiar desde el panel",
+  "imagen": "img/banner.svg",
+  "alt": "Banner de prueba con fondo café oscuro"
+}
