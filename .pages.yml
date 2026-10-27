@@ -25,26 +25,26 @@ content:
     type: collection
     path: contenido/talleres
     fields:
-      - name: titulo
-        label: Título
-        type: string
-        required: true
-      - name: fecha
-        label: Fecha
-        type: date
-      - name: resumen
-        label: Resumen corto (sale en el listado)
-        type: text
-      - name: imagen
-        label: Imagen de portada
-        type: image
-      - name: alt
-        label: Texto alternativo de la imagen
-        type: string
-      - name: publicado
-        label: Publicado
-        type: boolean
-        default: true
       - name: body
-        label: Descripción completa
+        label: Introducción (opcional)
         type: rich-text
+      - name: secciones
+        label: Contenido (agrega los bloques que necesites, en orden)
+        type: object
+        list: true
+        fields:
+          - name: subtitulo
+            label: Subtítulo (opcional)
+            type: string
+          - name: imagen
+            label: Imagen (opcional)
+            type: image
+          - name: alt
+            label: Texto alternativo de la imagen
+            type: string
+          - name: video
+            label: Enlace de YouTube (opcional)
+            type: string
+          - name: descripcion
+            label: Descripción (opcional)
+            type: rich-text
